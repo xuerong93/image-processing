@@ -1,0 +1,93 @@
+%image processing project 1 (image 1 ),redraw calibration with image 1
+clear all; close all; clc;
+imshow('project1_image1.JPG');
+P=[0,0,0;
+    0,1,0;
+    4,0,0;
+    5,4,0;
+    0,8,7;
+    6,0,9;
+    9,0,3;
+    0,7,2;
+    9,6,0;
+    0,8,0];                 %word coordinate
+p=[1344,1802;
+   1456,1809;
+   1146,1965;
+   1630,2045;
+   2287,963;
+   927,700;
+   746,1767;
+   2163,1598;
+   1777,2326;
+   2288,1840];                     %points on the image 1
+ 
+for i=1:1:10
+P_M(i*2-1:i*2,:)=[[P(i,:),1], zeros(1,4), -p(i,1)*[P(i,:),1];
+                   zeros(1,4), [P(i,:),1], -p(i,2)*[P(i,:),1]];
+end
+[V,D]=eig(P_M'*P_M);
+M=[V(1:4,1)';V(5:8,1)';V(9:12,1)'];         %get matrix M
+A=M(:,1:3);
+b=M(:,4);
+a1=A(1,:)';
+a2=A(2,:)';
+a3=A(3,:)';
+
+rou=-1/norm(a3);          %for image 1 apthelong=-1
+mu0=rou^2*(a1'*a3);
+v0=rou^2*(a2'*a3);
+ 
+cross13=cross(a1,a3);
+cross23=cross(a2,a3);
+ 
+r3=rou*a3;
+r1=cross23/norm(cross23);
+r2=cross(r3,r1);
+R=[r1'; r2'; r3'];
+ 
+theta=acos(-((cross13)'*(cross23))/((norm(cross13))*(norm(cross23))));
+afa=rou^2*norm(cross13)*sin(theta);
+beta=rou^2*norm(cross23)*sin(theta);
+K=[afa,-afa*cot(theta),mu0;
+   0,beta/sin(theta),v0 ;
+   0,0,1 ];
+t=rou*inv(K)*b;
+ 
+M=[afa*r1'-afa*cot(theta)*r2'+mu0*r3', afa*t(1)+cot(theta)*t(2)+mu0*t(3);
+   (beta/sin(theta))*r2'+v0*r3',(beta/sin(theta))*t(2)+v0*t(3) ;
+   r3', t(3) ];
+hold on;
+for i=0:10
+P_(3*i+1:3*i+3,:)=[0,0,i;
+             0,10,i;
+             10,0,i];
+end
+for i=0:10
+P_(3*i+1+33:3*i+3+33,:)=[0,i,0;
+             0,i,10;
+             10,i,0];
+end
+for i=0:10
+P_(3*i+1+66:3*i+3+66,:)=[i,0,0;
+             i,0,10;
+             i,10,0];
+end
+for i=1:99
+ p_(i,:)=(M*[P_(i,:),1]')/((M(3,:)*[P_(i,:),1]'));
+end
+ 
+for i=1:10
+plot([p_(3*i+1:3*i+2,1)],[p_(3*i+1:3*i+2,2)],'r-','linewidth',2);  %horizontal line in yz plane
+plot([p_(3*i+1,1),p_(3*i+3,1)],[p_(3*i+1,2),p_(3*i+3,2)],'b-','linewidth',2);%horizontal line in xz plane
+end
+for i=23:32
+plot([p_(3*i+1:3*i+2,1)],[p_(3*i+1:3*i+2,2)],'b-','linewidth',2);%heritical line in xz plane
+plot([p_(3*i+1,1),p_(3*i+3,1)],[p_(3*i+1,2),p_(3*i+3,2)],'g-','linewidth',2);%horizontal line in xy plane
+end
+for i=12:21
+plot([p_(3*i+1,1),p_(3*i+3,1)],[p_(3*i+1,2),p_(3*i+3,2)],'g-','linewidth',2);%heritical line in xy plane 
+plot([p_(3*i+1:3*i+2,1)],[p_(3*i+1:3*i+2,2)],'r-','linewidth',2);  %heritical line in yz plane 
+end
+
+
